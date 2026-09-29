@@ -1,13 +1,12 @@
-import pandas as pd
-import numpy as np
-import os
-import time
-import dotenv
 import ast
-from sqlalchemy.sql import text
+import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Union
-from sqlalchemy import create_engine, Engine
+from typing import Union
+
+import numpy as np
+import pandas as pd
+from sqlalchemy import Engine, create_engine
+from sqlalchemy.sql import text
 
 # Create an SQLite database
 db_engine = create_engine("sqlite:///munder_difflin.db")
@@ -292,7 +291,7 @@ def create_transaction(
         print(f"Error creating transaction: {e}")
         raise
 
-def get_all_inventory(as_of_date: str) -> Dict[str, int]:
+def get_all_inventory(as_of_date: str) -> dict[str, int]:
     """
     Retrieve a snapshot of available inventory as of a specific date.
 
@@ -450,7 +449,7 @@ def get_cash_balance(as_of_date: Union[str, datetime]) -> float:
         return 0.0
 
 
-def generate_financial_report(as_of_date: Union[str, datetime]) -> Dict:
+def generate_financial_report(as_of_date: Union[str, datetime]) -> dict:
     """
     Generate a complete financial report for the company as of a specific date.
 
@@ -521,7 +520,7 @@ def generate_financial_report(as_of_date: Union[str, datetime]) -> Dict:
     }
 
 
-def search_quote_history(search_terms: List[str], limit: int = 5) -> List[Dict]:
+def search_quote_history(search_terms: list[str], limit: int = 5) -> list[dict]:
     """
     Retrieve a list of historical quotes that match any of the provided search terms.
 
