@@ -1,12 +1,19 @@
 import ast
+import os
 import time
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Union
 
+import dotenv
 import numpy as np
 import pandas as pd
+from smolagents import OpenAIServerModel, tool
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.sql import text
+
+# Let's load the environment variable 
+dotenv.load_dotenv(dotenv_path=Path(__file__).parent / '.env')
 
 # Create an SQLite database
 db_engine = create_engine("sqlite:///munder_difflin.db")
@@ -291,6 +298,7 @@ def create_transaction(
         print(f"Error creating transaction: {e}")
         raise
 
+@tool
 def get_all_inventory(as_of_date: str) -> dict[str, int]:
     """
     Retrieve a snapshot of available inventory as of a specific date.
@@ -328,6 +336,7 @@ def get_all_inventory(as_of_date: str) -> dict[str, int]:
     # Convert the result into a dictionary {item_name: stock}
     return dict(zip(result["item_name"], result["stock"]))
 
+@tool 
 def get_stock_level(item_name: str, as_of_date: Union[str, datetime]) -> pd.DataFrame:
     """
     Retrieve the stock level of a specific item as of a given date.
@@ -519,7 +528,7 @@ def generate_financial_report(as_of_date: Union[str, datetime]) -> dict:
         "top_selling_products": top_selling_products,
     }
 
-
+@tool
 def search_quote_history(search_terms: list[str], limit: int = 5) -> list[dict]:
     """
     Retrieve a list of historical quotes that match any of the provided search terms.
@@ -589,6 +598,19 @@ def search_quote_history(search_terms: list[str], limit: int = 5) -> list[dict]:
 
 
 # Set up and load your env parameters and instantiate your model.
+openai_api_key = os.getenv('UDACITY_OPENAI_API_KEY')
+if not openai_api_key:
+    raise ValueError(
+        "OpenAI API key is not set. Please set the UDACITY_OPENAI_API_KEY environment variable."
+    )
+
+model = OpenAIServerModel(
+    model_id='gpt-4o-mini',
+    api_base='https://openai.vocareum.com/v1',
+    api_key=openai_api_key,
+)
+
+
 
 
 """Set up tools for your agents to use, these should be methods that combine the database functions above
@@ -612,7 +634,7 @@ def search_quote_history(search_terms: list[str], limit: int = 5) -> list[dict]:
 def run_test_scenarios():
     
     print("Initializing Database...")
-    init_database()
+    init_database(db_engine)
     try:
         quote_requests_sample = pd.read_csv("quote_requests_sample.csv")
         quote_requests_sample["request_date"] = pd.to_datetime(
